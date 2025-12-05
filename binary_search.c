@@ -43,7 +43,7 @@ static int
 stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 {
 
-	typeof(array_size) mid = array_size, mask = -2, val, res;
+	typeof(array_size) mid = array_size, mask = -2, val;
 	int	*restrict a = array;
 
 	checks++;	// Incrementing advance of check at the end
@@ -54,8 +54,8 @@ stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 		checks++;
 		val = (mid++ >> 1);
 		mid >>= 1;
-		res = ((key < *(a + val)) - 1) & val;
-		a += res;
+		val = ((key < *(a + val)) - 1) & val;
+		a += val;
 	}
 
 	if (key == *a)
