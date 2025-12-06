@@ -13,20 +13,21 @@ unsigned int checks;
 
 // Stew's optimised boundless binary search
 // A ~8% speed boost over monobound, but clang works even better than gcc
-static int
+int
 stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 {
-	typeof(array_size) mid = array_size, mask = -2, val;
-	int	*restrict a = array, *restrict b;
+	size_t	mid = array_size, val = 0;
+	int	*restrict a = array;
 
 	checks++;	// Incrementing advance of check at the end
 
-	while (mid & mask) {
+	while (mid > 1) {
 		checks++;
 		val = (mid++ >> 1);
 		mid >>= 1;
-		b = a + val;
-		a = (key < *b) ? a : b;
+		a += val;
+		if (key < *a)
+			a -= val;
 	}
 
 	if (key == *a)
@@ -39,11 +40,10 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 // test framework it is slower than the above, but when used in different
 // applications it may prove to be faster than the above depending on access
 // patterns and CPU specific architecture.  I include it for completeness.
-static int
+int
 stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 {
-
-	typeof(array_size) mid = array_size, mask = -2, val;
+	size_t	mid = array_size, mask = -2, val;
 	int	*restrict a = array;
 
 	checks++;	// Incrementing advance of check at the end
@@ -54,8 +54,9 @@ stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 		checks++;
 		val = (mid++ >> 1);
 		mid >>= 1;
-		val = ((key < *(a + val)) - 1) & val;
 		a += val;
+		val = ((key >= *a) - 1) & val;
+		a -= val;
 	}
 
 	if (key == *a)
@@ -63,6 +64,55 @@ stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 	return -1;
 } // stews_bitwise_boundless
 
+
+int stews_optimised_monobound(int *array, unsigned int array_size, int key)
+{
+	size_t	mid, top = array_size, mask = -2;
+	int	*restrict a = array;
+
+	checks++;	// Incrementing advance of check at the end
+
+	while (top & mask) {
+		checks++;
+		mid = top >> 1;
+		a += mid;
+		if (key < *a)
+			a -= mid;
+		top -= mid;
+	}
+
+	if (key == *a)
+		return a - array;
+
+	return -1;
+} // stews_optimised_monobound
+
+
+int stews_optimised_standard(int *array, unsigned int array_size, int key)
+{
+//	if (array_size == 0)
+//		return -1;
+
+	size_t	 max = array_size - 1;
+	int	*restrict a = array, *restrict b;
+
+	checks++;	// Incrementing advance of check at the end
+
+	while (max > 1) {
+		++checks;
+
+		size_t	val = max >> 1;
+		b = a + val;
+		if (key >= *b)
+			a = b;
+		max -= val;
+	}
+
+	if (key == *a)
+		return a - array;
+
+	return -1;
+} // stews_optimised_standard
 
 // linear search, needs to run backwards so it's stable
 
@@ -707,8 +757,10 @@ int main(int argc, char **argv)
 	run(doubletapped_binary_search);
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
+	run(stews_optimised_standard);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
+	run(stews_optimised_monobound);
 	run(monobound_quaternary_search);
 	run(monobound_interpolated_search);
 	run(adaptive_binary_search);
@@ -727,9 +779,11 @@ int main(int argc, char **argv)
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "Name", "Items", "Hits", "Misses", "Checks", "Time");
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "----------", "----------", "----------", "----------", "----------", "----------");
 
-	run(monobound_binary_search);
+	run(stews_optimised_standard);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
+	run(stews_optimised_monobound);
+	run(monobound_binary_search);
 	run(monobound_interpolated_search);
 	run(adaptive_binary_search);
 
@@ -754,8 +808,10 @@ int main(int argc, char **argv)
 	run(doubletapped_binary_search);
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
+	run(stews_optimised_standard);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
+	run(stews_optimised_monobound);
 	run(monobound_quaternary_search);
 	run(monobound_interpolated_search);
 	run(adaptive_binary_search);
