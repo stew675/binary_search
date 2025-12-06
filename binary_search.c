@@ -16,7 +16,7 @@ unsigned int checks;
 int
 stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 {
-	size_t	mid = array_size, val = 0;
+	uint32_t mid = array_size, val = 0;
 	int	*restrict a = array;
 
 	checks++;	// Incrementing advance of check at the end
@@ -36,6 +36,32 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 } // stews_optimised_boundless
 
 
+int
+stews_optimised_triple(int *array, unsigned int array_size, int key)
+{
+	typeof(array_size) val, top = array_size;
+	int	*restrict a = array;
+
+	while (top > 2) {
+		checks++;
+		val = top >> 1;
+		a += val;
+		if (key < *a)
+			a -= val;
+		top -= val;
+	}
+
+	a += top;
+	while (top--) {
+		++checks;
+		if (key == *--a)
+			return a - array;
+	}
+
+	return -1;
+} // stews_optimised_triple
+
+
 // This is a variant that uses bitwise arithmetic instead.  When using this
 // test framework it is slower than the above, but when used in different
 // applications it may prove to be faster than the above depending on access
@@ -43,7 +69,7 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 int
 stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 {
-	size_t	mid = array_size, mask = -2, val;
+	uint32_t mid = array_size, mask = -2, val;
 	int	*restrict a = array;
 
 	checks++;	// Incrementing advance of check at the end
@@ -67,7 +93,7 @@ stews_bitwise_boundless(int *restrict array, unsigned int array_size, int key)
 
 int stews_optimised_monobound(int *array, unsigned int array_size, int key)
 {
-	size_t	mid, top = array_size, mask = -2;
+	uint32_t mid, top = array_size, mask = -2;
 	int	*restrict a = array;
 
 	checks++;	// Incrementing advance of check at the end
@@ -90,10 +116,7 @@ int stews_optimised_monobound(int *array, unsigned int array_size, int key)
 
 int stews_optimised_standard(int *array, unsigned int array_size, int key)
 {
-//	if (array_size == 0)
-//		return -1;
-
-	size_t max = array_size - 1;
+	uint32_t val, max = array_size - 1;
 	int	*restrict a = array, *restrict b;
 
 	checks++;	// Incrementing advance of check at the end
@@ -101,12 +124,10 @@ int stews_optimised_standard(int *array, unsigned int array_size, int key)
 	while (max > 1) {
 		++checks;
 
-		size_t val = max >> 1;
+		val = max >> 1;
 		b = a + val;
 		uintptr_t res = (key >= *b) - 1;
 		a = (int *restrict)((~res & (uintptr_t)b) | (res & (uintptr_t)a));
-//		if (key >= *b)
-//			a = b;
 		max -= val;
 	}
 
@@ -760,6 +781,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 	run(stews_optimised_standard);
+	run(stews_optimised_triple);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
@@ -782,6 +804,7 @@ int main(int argc, char **argv)
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "----------", "----------", "----------", "----------", "----------", "----------");
 
 	run(stews_optimised_standard);
+	run(stews_optimised_triple);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
@@ -811,6 +834,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 	run(stews_optimised_standard);
+	run(stews_optimised_triple);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
