@@ -37,29 +37,31 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 
 
 int
-stews_optimised_triple(int *array, unsigned int array_size, int key)
+stews_optimised_search(int *array, unsigned int array_size, int key)
 {
-	typeof(array_size) val, top = array_size;
-	int	*restrict a = array;
+	if (array_size > 0) {
+		uint32_t val, top = array_size - 1;
+		int	*restrict a = array;
 
-	while (top > 2) {
-		checks++;
-		val = top >> 1;
-		a += val;
-		if (key < *a)
-			a -= val;
-		top -= val;
-	}
+#if 1
+		for (checks++; (val = (top >> 1)); checks++, top -= val)
+			if (key >= *(a + val))
+				a += val;
+#else
+		for (checks++; top > 1; checks++, top -= val) {
+			val = top >> 1;
+			a += val;
+			if (key < *a)
+				a -= val;
+		}
+#endif
 
-	a += top;
-	while (top--) {
-		++checks;
-		if (key == *--a)
+		if (key == *a)
 			return a - array;
 	}
 
 	return -1;
-} // stews_optimised_triple
+} // stews_optimised_search
 
 
 // This is a variant that uses bitwise arithmetic instead.  When using this
@@ -781,7 +783,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 	run(stews_optimised_standard);
-	run(stews_optimised_triple);
+	run(stews_optimised_search);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
@@ -804,7 +806,7 @@ int main(int argc, char **argv)
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "----------", "----------", "----------", "----------", "----------", "----------");
 
 	run(stews_optimised_standard);
-	run(stews_optimised_triple);
+	run(stews_optimised_search);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
@@ -834,7 +836,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 	run(stews_optimised_standard);
-	run(stews_optimised_triple);
+	run(stews_optimised_search);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
