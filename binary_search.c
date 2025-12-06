@@ -93,7 +93,7 @@ int stews_optimised_standard(int *array, unsigned int array_size, int key)
 //	if (array_size == 0)
 //		return -1;
 
-	size_t	 max = array_size - 1;
+	size_t max = array_size - 1;
 	int	*restrict a = array, *restrict b;
 
 	checks++;	// Incrementing advance of check at the end
@@ -101,10 +101,12 @@ int stews_optimised_standard(int *array, unsigned int array_size, int key)
 	while (max > 1) {
 		++checks;
 
-		size_t	val = max >> 1;
+		size_t val = max >> 1;
 		b = a + val;
-		if (key >= *b)
-			a = b;
+		uintptr_t res = (key >= *b) - 1;
+		a = (int *restrict)((~res & (uintptr_t)b) | (res & (uintptr_t)a));
+//		if (key >= *b)
+//			a = b;
 		max -= val;
 	}
 
