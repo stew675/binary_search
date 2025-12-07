@@ -23,7 +23,7 @@ BIN=binary_search
 
 CC= gcc
 #CC= clang
-CC_OPT_FLAGS= -O3 -Wno-unused-function
+CC_OPT_FLAGS= -O3 -mtune=generic -Wno-unused-function
 LD_OPT_FLAGS= -O3 -mtune=native
 DEBUG_FLAGS= -Wall # -g -pg --profile -fprofile-arcs -ftest-coverage
 LIBS=

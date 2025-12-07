@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-unsigned int checks;
+size_t checks;
 
 // Stew's optimised boundless binary search
 // A ~8% speed boost over monobound, but clang works even better than gcc
@@ -37,31 +37,40 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 
 
 int
-stews_optimised_search(int *array, unsigned int array_size, int key)
+hyper_optimised_search(int *array, unsigned int len, int key)
 {
-	if (array_size > 0) {
-		uint32_t val, top = array_size - 1;
-		int	*restrict a = array;
+	if (len < 1)
+		return -1;
+
+	uint32_t max = len - 1;
+	int	*restrict a = array;
 
 #if 1
-		for (checks++; (val = (top >> 1)); checks++, top -= val)
-			if (key >= *(a + val))
-				a += val;
-#else
-		for (checks++; top > 1; checks++, top -= val) {
-			val = top >> 1;
-			a += val;
-			if (key < *a)
-				a -= val;
-		}
-#endif
-
-		if (key == *a)
-			return a - array;
+	checks++;
+	for (uint32_t val; (val = (max >> 1)); checks++, max -= val) {
+		int *restrict b = a + val;
+		a = (key >= *b) ? b : a;
 	}
 
+	if (key == *a)
+		return a - array;
+#else
+	for (uint32_t val; max > 2; max -= val) {
+		checks++;
+		val = max >> 1;
+		int *restrict b = &a[val];
+		a = (key >= b[0]) ? b : a;
+	}
+
+	do {
+		checks++;
+		if (key == a[max])
+			return &a[max] - array;
+	} while (max-- > 0);
+#endif
+
 	return -1;
-} // stews_optimised_search
+} // hyper_optimised_search
 
 
 // This is a variant that uses bitwise arithmetic instead.  When using this
@@ -703,11 +712,11 @@ void execute(int (*algo_func)(int *, unsigned int, int), const char * algo_name)
 
 	if (sequential)
 	{
-		printf("| %30s | %10d | %10d | %10d | %10d | %10f | %10lld |\n", algo_name, max, hit, miss, checks, best / 1000000.0, stable);
+		printf("| %30s | %10d | %10d | %10d | %10lu | %10f | %10lld |\n", algo_name, max, hit, miss, checks, best / 1000000.0, stable);
 	}
 	else
 	{
-		printf("| %30s | %10d | %10d | %10d | %10d | %10f |\n", algo_name, max, hit, miss, checks, best / 1000000.0);
+		printf("| %30s | %10d | %10d | %10d | %10lu | %10f |\n", algo_name, max, hit, miss, checks, best / 1000000.0);
 	}
 
 }
@@ -782,11 +791,11 @@ int main(int argc, char **argv)
 	run(doubletapped_binary_search);
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
-	run(stews_optimised_standard);
-	run(stews_optimised_search);
-	run(stews_bitwise_boundless);
-	run(stews_optimised_boundless);
-	run(stews_optimised_monobound);
+//	run(stews_optimised_standard);
+	run(hyper_optimised_search);
+//	run(stews_bitwise_boundless);
+//	run(stews_optimised_boundless);
+//	run(stews_optimised_monobound);
 	run(monobound_quaternary_search);
 	run(monobound_interpolated_search);
 	run(adaptive_binary_search);
@@ -805,11 +814,12 @@ int main(int argc, char **argv)
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "Name", "Items", "Hits", "Misses", "Checks", "Time");
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "----------", "----------", "----------", "----------", "----------", "----------");
 
-	run(stews_optimised_standard);
-	run(stews_optimised_search);
-	run(stews_bitwise_boundless);
-	run(stews_optimised_boundless);
-	run(stews_optimised_monobound);
+	run(tripletapped_binary_search);
+//	run(stews_optimised_standard);
+	run(hyper_optimised_search);
+//	run(stews_bitwise_boundless);
+//	run(stews_optimised_boundless);
+//	run(stews_optimised_monobound);
 	run(monobound_binary_search);
 	run(monobound_interpolated_search);
 	run(adaptive_binary_search);
@@ -835,11 +845,11 @@ int main(int argc, char **argv)
 	run(doubletapped_binary_search);
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
-	run(stews_optimised_standard);
-	run(stews_optimised_search);
-	run(stews_bitwise_boundless);
-	run(stews_optimised_boundless);
-	run(stews_optimised_monobound);
+//	run(stews_optimised_standard);
+	run(hyper_optimised_search);
+//	run(stews_bitwise_boundless);
+//	run(stews_optimised_boundless);
+//	run(stews_optimised_monobound);
 	run(monobound_quaternary_search);
 	run(monobound_interpolated_search);
 	run(adaptive_binary_search);
