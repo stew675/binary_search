@@ -37,40 +37,21 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 
 
 int
-hyper_optimised_search(int *array, unsigned int len, int key)
+branchless_binary_search(int *array, unsigned int len, int key)
 {
-	if (len < 1)
-		return -1;
+        if (len > 0) {
+                int     *restrict a = array;
+                uint32_t max = len - 1;
 
-	uint32_t max = len - 1;
-	int	*restrict a = array;
-
-#if 1
-	checks++;
-	for (uint32_t val; (val = (max >> 1)); checks++, max -= val) {
-		int *restrict b = a + val;
-		a = (key >= *b) ? b : a;
-	}
-
-	if (key == *a)
-		return a - array;
-#else
-	for (uint32_t val; max > 2; max -= val) {
 		checks++;
-		val = max >> 1;
-		int *restrict b = &a[val];
-		a = (key >= b[0]) ? b : a;
-	}
+                for (uint32_t val; (val = (max >> 1)); checks++, max -= val)
+			a = (key >= *(a + val)) ? (a + val) : a;
 
-	do {
-		checks++;
-		if (key == a[max])
-			return &a[max] - array;
-	} while (max-- > 0);
-#endif
-
-	return -1;
-} // hyper_optimised_search
+                if (key == *a)
+                        return a - array;
+        }
+        return -1;
+} // branchless_binary_search
 
 
 // This is a variant that uses bitwise arithmetic instead.  When using this
@@ -792,7 +773,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 //	run(stews_optimised_standard);
-	run(hyper_optimised_search);
+	run(branchless_binary_search);
 //	run(stews_bitwise_boundless);
 //	run(stews_optimised_boundless);
 //	run(stews_optimised_monobound);
@@ -814,9 +795,8 @@ int main(int argc, char **argv)
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "Name", "Items", "Hits", "Misses", "Checks", "Time");
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "----------", "----------", "----------", "----------", "----------", "----------");
 
-	run(tripletapped_binary_search);
 //	run(stews_optimised_standard);
-	run(hyper_optimised_search);
+	run(branchless_binary_search);
 //	run(stews_bitwise_boundless);
 //	run(stews_optimised_boundless);
 //	run(stews_optimised_monobound);
@@ -846,7 +826,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 //	run(stews_optimised_standard);
-	run(hyper_optimised_search);
+	run(branchless_binary_search);
 //	run(stews_bitwise_boundless);
 //	run(stews_optimised_boundless);
 //	run(stews_optimised_monobound);
