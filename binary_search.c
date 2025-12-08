@@ -43,15 +43,8 @@ branchless_binary_search(int *array, unsigned int len, int key)
 		int     *restrict a = array;
 		uint32_t val, max = len;
 
-		for ( ; (val = (max >> 1)) > 1; checks++, max -= val)
+		for ( ; (val = (max >> 1)); checks++, max -= val)
 			a = (key >= *(a + val)) ? (a + val) : a;
-
-		if (__builtin_expect(val > 0, 1)) {
-			checks++;
-			if (key == *++a)
-				return a - array;
-			a--;
-		}
 
 		checks++;
 		if (key == *a)
@@ -59,6 +52,31 @@ branchless_binary_search(int *array, unsigned int len, int key)
 	}
         return -1;
 } // branchless_binary_search
+
+
+int
+branchless_double_tap(int *array, unsigned int len, int key)
+{
+	if (len) {
+		int     *restrict a = array;
+		uint32_t val, max = len;
+
+		for ( ; (val = (max >> 1)) > 1; checks++, max -= val)
+			a = (key >= *(a + val)) ? (a + val) : a;
+
+		// Only ever false if len == 1
+		if (__builtin_expect((val == 1), 1)) {
+			checks++;
+			if (key == *(a + 1))
+				return (a + 1) - array;
+		}
+
+		checks++;
+		if (key == *a)
+			return a - array;
+	}
+        return -1;
+} // branchless_double_tap
 
 
 // This is a variant that uses bitwise arithmetic instead.  When using this
@@ -777,6 +795,7 @@ int main(int argc, char **argv)
 	run(tripletapped_binary_search);
 //	run(stews_optimised_standard);
 	run(branchless_binary_search);
+	run(branchless_double_tap);
 //	run(stews_bitwise_boundless);
 //	run(stews_optimised_boundless);
 //	run(stews_optimised_monobound);
@@ -800,6 +819,7 @@ int main(int argc, char **argv)
 
 //	run(stews_optimised_standard);
 	run(branchless_binary_search);
+	run(branchless_double_tap);
 //	run(stews_bitwise_boundless);
 //	run(stews_optimised_boundless);
 //	run(stews_optimised_monobound);
@@ -830,6 +850,7 @@ int main(int argc, char **argv)
 	run(tripletapped_binary_search);
 //	run(stews_optimised_standard);
 	run(branchless_binary_search);
+	run(branchless_double_tap);
 //	run(stews_bitwise_boundless);
 //	run(stews_optimised_boundless);
 //	run(stews_optimised_monobound);
