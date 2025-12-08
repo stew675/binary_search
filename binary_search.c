@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-unsigned int checks;
+size_t checks;
 
 // Stew's optimised boundless binary search
 // A ~8% speed boost over monobound, but clang works even better than gcc
@@ -37,31 +37,21 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 
 
 int
-stews_optimised_search(int *array, unsigned int array_size, int key)
+branchless_binary_search(int *array, unsigned int len, int key)
 {
-	if (array_size > 0) {
-		uint32_t val, top = array_size - 1;
-		int	*restrict a = array;
+        if (len > 0) {
+                int     *restrict a = array;
+                uint32_t max = len - 1;
 
-#if 1
-		for (checks++; (val = (top >> 1)); checks++, top -= val)
-			if (key >= *(a + val))
-				a += val;
-#else
-		for (checks++; top > 1; checks++, top -= val) {
-			val = top >> 1;
-			a += val;
-			if (key < *a)
-				a -= val;
-		}
-#endif
+		checks++;
+                for (uint32_t val; (val = (max >> 1)); checks++, max -= val)
+			a = (key >= *(a + val)) ? (a + val) : a;
 
-		if (key == *a)
-			return a - array;
-	}
-
-	return -1;
-} // stews_optimised_search
+                if (key == *a)
+                        return a - array;
+        }
+        return -1;
+} // branchless_binary_search
 
 
 // This is a variant that uses bitwise arithmetic instead.  When using this
@@ -703,11 +693,11 @@ void execute(int (*algo_func)(int *, unsigned int, int), const char * algo_name)
 
 	if (sequential)
 	{
-		printf("| %30s | %10d | %10d | %10d | %10d | %10f | %10lld |\n", algo_name, max, hit, miss, checks, best / 1000000.0, stable);
+		printf("| %30s | %10d | %10d | %10d | %10lu | %10f | %10lld |\n", algo_name, max, hit, miss, checks, best / 1000000.0, stable);
 	}
 	else
 	{
-		printf("| %30s | %10d | %10d | %10d | %10d | %10f |\n", algo_name, max, hit, miss, checks, best / 1000000.0);
+		printf("| %30s | %10d | %10d | %10d | %10lu | %10f |\n", algo_name, max, hit, miss, checks, best / 1000000.0);
 	}
 
 }
@@ -783,7 +773,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 	run(stews_optimised_standard);
-	run(stews_optimised_search);
+	run(branchless_binary_search);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
@@ -806,7 +796,7 @@ int main(int argc, char **argv)
 	printf("| %30s | %10s | %10s | %10s | %10s | %10s |\n", "----------", "----------", "----------", "----------", "----------", "----------");
 
 	run(stews_optimised_standard);
-	run(stews_optimised_search);
+	run(branchless_binary_search);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
@@ -836,7 +826,7 @@ int main(int argc, char **argv)
 	run(monobound_binary_search);
 	run(tripletapped_binary_search);
 	run(stews_optimised_standard);
-	run(stews_optimised_search);
+	run(branchless_binary_search);
 	run(stews_bitwise_boundless);
 	run(stews_optimised_boundless);
 	run(stews_optimised_monobound);
