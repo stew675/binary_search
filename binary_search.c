@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <assert.h>
 
 size_t checks;
 
@@ -35,7 +36,6 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 	return -1;
 } // stews_optimised_boundless
 
-
 int
 branchless_binary_search(int *array, unsigned int len, int key)
 {
@@ -46,11 +46,16 @@ branchless_binary_search(int *array, unsigned int len, int key)
 		for ( ; (val = (max >> 1)) > 1; checks++, max -= val)
 			a = (key >= *(a + val)) ? (a + val) : a;
 
-		do {
+		if (__builtin_expect(val > 0, 1)) {
 			checks++;
-			if (key == a[val])
-				return (a + val) - array;
-		} while (val--);
+			if (key == *++a)
+				return a - array;
+			a--;
+		}
+
+		checks++;
+		if (key == *a)
+			return a - array;
 	}
         return -1;
 } // branchless_binary_search
