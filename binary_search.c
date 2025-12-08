@@ -39,17 +39,19 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 int
 branchless_binary_search(int *array, unsigned int len, int key)
 {
-        if (len > 0) {
-                int     *restrict a = array;
-                uint32_t max = len - 1;
+	if (len) {
+		int     *restrict a = array;
+		uint32_t val, max = len;
 
-		checks++;
-                for (uint32_t val; (val = (max >> 1)); checks++, max -= val)
+		for ( ; (val = (max >> 1)) > 1; checks++, max -= val)
 			a = (key >= *(a + val)) ? (a + val) : a;
 
-                if (key == *a)
-                        return a - array;
-        }
+		do {
+			checks++;
+			if (key == a[val])
+				return (a + val) - array;
+		} while (val--);
+	}
         return -1;
 } // branchless_binary_search
 
@@ -357,10 +359,6 @@ int monobound_quaternary_search(int *array, unsigned int array_size, int key)
 {
 	unsigned int bot, mid, top;
 
-	if (array_size == 0)
-	{
-		return -1;
-	}
 	bot = 0;
 	top = array_size;
 
