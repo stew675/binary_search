@@ -36,38 +36,15 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 	return -1;
 } // stews_optimised_boundless
 
-#if 0
-int
-branchless_binary_search(int *restrict array, unsigned int len, int key)
-{
-        if (len) {
-		int	*restrict a = array;
-		size_t	pos = 0, val, max = len;
-
-                for ( ; (val = (max >> 1)); checks++) {
-			max -= val;
-			val += pos;
-			if (key >= a[val])
-				pos = val;
-		}
-
-                checks++;
-                if (key == a[pos])
-                        return pos;
-        }
-        return -1;
-} // branchless_binary_search
-
-#else
 
 int
 branchless_binary_search(int *array, unsigned int len, int key)
 {
 	if (len) {
 		int *restrict a = array;
-		uint32_t max = len;
+		unsigned int val, max = len;
 
-		for (uint32_t val; (val = (max >> 1)); checks++, max -= val)
+		for ( ; (val = (max >> 1)); checks++, max -= val)
 			if (key >= a[val])
 				a += val;
 		checks++;
@@ -76,16 +53,14 @@ branchless_binary_search(int *array, unsigned int len, int key)
 	}
 	return -1;
 } // branchless_binary_search
-#endif
+
 
 int
 branchless_double_tap(int *array, unsigned int len, int key)
 {
-	int ret = -1;
-
 	if (len) {
 		int     *restrict a = array;
-		uint32_t val, max = len;
+		unsigned int val, max = len;
 
 		for ( ; (val = (max >> 1)) > 1; checks++, max -= val)
 			if (key >= a[val])
@@ -95,18 +70,15 @@ branchless_double_tap(int *array, unsigned int len, int key)
 		if (__builtin_expect((val == 1), 1)) {
 			int     *restrict b = a + 1;
 			checks++;
-			if (key == *b) {
-				ret = b - array;
-				goto done;
-			}
+			if (key == *b)
+				return b - array;
 		}
 
 		checks++;
 		if (key == *a)
-			ret = a - array;
+			return a - array;
 	}
-done:
-        return ret;
+        return -1;
 } // branchless_double_tap
 
 
