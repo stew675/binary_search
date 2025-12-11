@@ -56,28 +56,29 @@ branchless_binary_search(int *array, unsigned int len, int key)
 
 
 int
-branchless_double_tap(int *array, unsigned int len, int key)
+branchless_double_tap(int *restrict a, unsigned int len, int key)
 {
-	if (len) {
-		int     *restrict a = array;
-		unsigned int val, max = len;
+	typeof(a) b = a;
 
-		for ( ; (val = (max >> 1)) > 1; checks++, max -= val)
-			if (key >= a[val])
-				a += val;
-
-		// Only ever false if len == 1
-		if (__builtin_expect((val == 1), 1)) {
-			int     *restrict b = a + 1;
-			checks++;
-			if (key == *b)
-				return b - array;
-		}
-
-		checks++;
-		if (key == *a)
-			return a - array;
+	if (len < 2) {
+		if (len) goto check_one;
+		goto check_none;
 	}
+
+	for (typeof(len) val; (val = (len >> 1)) > 1; checks++, len -= val)
+		if (key >= a[val])
+			a += val;
+
+	checks++;
+	if (key == a[1])
+		return (a + 1) - b;
+
+check_one:
+	checks++;
+	if (key == a[0])
+		return a - b;
+
+check_none:
         return -1;
 } // branchless_double_tap
 
