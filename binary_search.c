@@ -10,6 +10,12 @@
 #include <time.h>
 #include <assert.h>
 
+#ifdef __clang__
+#define branchless(x)   __builtin_unpredictable(x)
+#else
+#define branchless(x)   (x)
+#endif
+
 size_t checks;
 
 // Stew's optimised boundless binary search
@@ -27,7 +33,7 @@ stews_optimised_boundless(int *restrict array, unsigned int array_size, int key)
 		val = (mid++ >> 1);
 		mid >>= 1;
 		a += val;
-		if (key < *a)
+		if (branchless(key < *a))
 			a -= val;
 	}
 
@@ -45,7 +51,7 @@ branchless_binary_search(int *array, unsigned int len, int key)
 		unsigned int val, max = len;
 
 		for ( ; (val = (max >> 1)); checks++, max -= val)
-			if (key >= a[val])
+			if (branchless(key >= a[val]))
 				a += val;
 		checks++;
 		if (key == *a)
@@ -66,7 +72,7 @@ branchless_double_tap(int *restrict a, unsigned int len, int key)
 	}
 
 	for (typeof(len) val; (val = (len >> 1)) > 1; checks++, len -= val)
-		if (key >= a[val])
+		if (branchless(key >= a[val]))
 			a += val;
 
 	checks++;
@@ -123,7 +129,7 @@ int stews_optimised_monobound(int *array, unsigned int array_size, int key)
 		checks++;
 		mid = top >> 1;
 		a += mid;
-		if (key < *a)
+		if (branchless(key < *a))
 			a -= mid;
 		top -= mid;
 	}
@@ -225,7 +231,7 @@ int standard_binary_search(int *array, unsigned int array_size, int key)
 
 		++checks;
 
-		if (key < array[mid])
+		if (branchless(key < array[mid]))
 		{
 			top = mid - 1;
 		}
@@ -261,7 +267,7 @@ int boundless_binary_search(int *array, unsigned int array_size, int key)
 	{
 		++checks;
 
-		if (key >= array[bot + mid / 2])
+		if (branchless(key >= array[bot + mid / 2]))
 		{
 			bot += mid++ / 2;
 		}
@@ -291,7 +297,7 @@ int doubletapped_binary_search(int *array, unsigned int array_size, int key)
 	{
 		++checks;
 
-		if (key >= array[bot + mid / 2])
+		if (branchless(key >= array[bot + mid / 2]))
 		{
 			bot += mid++ / 2;
 		}
@@ -330,7 +336,7 @@ int monobound_binary_search(int *array, unsigned int array_size, int key)
 
 		++checks;
 
-		if (key >= array[bot + mid])
+		if (branchless(key >= array[bot + mid]))
 		{
 			bot += mid;
 		}
@@ -361,7 +367,7 @@ int tripletapped_binary_search(int *array, unsigned int array_size, int key)
 
 		++checks;
 
-		if (key >= array[bot + mid])
+		if (branchless(key >= array[bot + mid]))
 		{
 			bot += mid;
 		}
@@ -395,10 +401,10 @@ int monobound_quaternary_search(int *array, unsigned int array_size, int key)
 		top -= mid * 3;
 
 		++checks;
-		if (key < array[bot + mid * 2])
+		if (branchless(key < array[bot + mid * 2]))
 		{
 			++checks;
-			if (key >= array[bot + mid])
+			if (branchless(key >= array[bot + mid]))
 			{
 				bot += mid;
 			}
@@ -408,7 +414,7 @@ int monobound_quaternary_search(int *array, unsigned int array_size, int key)
 			bot += mid * 2;
 
 			++checks;
-			if (key >= array[bot + mid])
+			if (branchless(key >= array[bot + mid]))
 			{
 				bot += mid;
 			}
@@ -421,7 +427,7 @@ int monobound_quaternary_search(int *array, unsigned int array_size, int key)
 
 		++checks;
 
-		if (key >= array[bot + mid])
+		if (branchless(key >= array[bot + mid]))
 		{
 			bot += mid;
 		}
@@ -481,7 +487,7 @@ int monobound_interpolated_search(int *array, unsigned int array_size, int key)
 	{
 		while (1)
 		{
-			if (bot + top >= array_size)
+			if (branchless(bot + top >= array_size))
 			{
 				top = array_size - bot;
 				break;
@@ -490,7 +496,7 @@ int monobound_interpolated_search(int *array, unsigned int array_size, int key)
 
 			++checks;
 
-			if (key < array[bot])
+			if (branchless(key < array[bot]))
 			{
 				bot -= top;
 				break;
@@ -502,7 +508,7 @@ int monobound_interpolated_search(int *array, unsigned int array_size, int key)
 	{
 		while (1)
 		{
-			if (bot < top)
+			if (branchless(bot < top))
 			{
 				top = bot;
 				bot = 0;
@@ -527,7 +533,7 @@ int monobound_interpolated_search(int *array, unsigned int array_size, int key)
 
 		++checks;
 
-		if (key >= array[bot + mid])
+		if (branchless(key >= array[bot + mid]))
 		{
 			bot += mid;
 		}
@@ -538,7 +544,7 @@ int monobound_interpolated_search(int *array, unsigned int array_size, int key)
 	{
 		++checks;
 
-		if (key == array[bot + top])
+		if (branchless(key == array[bot + top]))
 		{
 			return bot + top;
 		}

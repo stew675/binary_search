@@ -21,10 +21,10 @@ BIN=binary_search
 # COMPILE TIME OPTION FLAGS
 ######################################################################################
 
-CC= gcc
-#CC= clang
-CC_OPT_FLAGS= -O3 -mtune=znver5 -Wno-unused-function
-LD_OPT_FLAGS= -O3 -mtune=native
+#CC= gcc
+CC= clang
+CC_OPT_FLAGS= -O3 -Wno-unused-function
+LD_OPT_FLAGS= -O3
 DEBUG_FLAGS= -Wall # -g -pg --profile -fprofile-arcs -ftest-coverage
 LIBS=
 
